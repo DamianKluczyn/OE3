@@ -9,7 +9,7 @@ from src.population.specimen import Specimen
 
 
 
-def discrete_crossover(parents, offspring_size):
+def discrete_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
 
