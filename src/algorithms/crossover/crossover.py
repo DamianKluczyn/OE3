@@ -9,47 +9,39 @@ from src.population.specimen import Specimen
 
 
 
-def discrete_crossover(self, specimen1, specimen2):
-    child1_chromosomes = []
-    child2_chromosomes = []
+def discrete_crossover(parents, offspring_size):
+    offspring = []
+    idx = 0
 
-    for i in range(len(specimen1.specimen)):
-        parent1_chromosome = specimen1.specimen[i].chromosome
-        parent2_chromosome = specimen2.specimen[i].chromosome
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
-        if random.random() < self.crossover_prob:
-            child1_chromosome = np.copy(parent1_chromosome)
-            child2_chromosome = np.copy(parent2_chromosome)
+        child1 = parent1
+        child2 = parent2
 
-            for i in range(len(parent1_chromosome)):
-                if random.uniform(0, 1) < self.swap_prob:
-                    child1_chromosome[i] = parent1_chromosome[i]
-                else:
-                    child1_chromosome[i] = parent2_chromosome[i]
-
-            for i in range(len(parent2_chromosome)):
-                if random.uniform(0, 1) < self.swap_prob:
-                    child2_chromosome[i] = parent2_chromosome[i]
-                else:
-                    child2_chromosome[i] = parent1_chromosome[i]
-
-            child1_chromosomes.append(child1_chromosome)
-            child2_chromosomes.append(child2_chromosome)
-        else:
-            if random.uniform(0, 1) < self.swap_prob:
-                child1_chromosomes.append(parent1_chromosome)
-                child2_chromosomes.append(parent2_chromosome)
+    
+        for i in range(parent1.shape[1]):
+            if random.uniform(0, 1) < 0.5:
+                child1[i] = parent1[i]
             else:
-                child1_chromosomes.append(parent2_chromosome)
-                child2_chromosomes.append(parent1_chromosome)
+                child1[i] = parent2[i]
 
-    child1 = Specimen.from_chromosomes(child1_chromosomes, specimen1.boundaries, specimen1.accuracy,
-                                        specimen1.fitness_function)
-    child2 = Specimen.from_chromosomes(child2_chromosomes, specimen2.boundaries, specimen2.accuracy,
-                                        specimen2.fitness_function)
 
-    self.children.append(child1)
-    self.children.append(child2)
+            if random.uniform(0, 1) < 0.5:
+                child2[i] = parent2[i]
+            else:
+                child2[i] = parent1[i]
+        
+        offspring.append(child1)
+        offspring.append(child2)
+
+        idx += 1
+    
+    return np.array(offspring)
+
+
+    
 
 def elite_crossover(self, specimen1, specimen2):
     if random.random() < self.crossover_prob:
@@ -185,28 +177,5 @@ def linkage_evolution_crossover(self, specimen1, specimen2):
         self.children.append(child1)
         self.children.append(child2)
 
-def cross(self, parent1, parent2):
-    self.children = []
-
-    if self.cross_method == 'single_point_crossover':
-        self.single_point_crossover(parent1, parent2)
-    elif self.cross_method == 'two_point_crossover':
-        self.two_point_crossover(parent1, parent2)
-    elif self.cross_method == 'three_point_crossover':
-        self.three_point_crossover(parent1, parent2)
-    elif self.cross_method == 'uniform_crossover':
-        self.uniform_crossover(parent1, parent2)
-    elif self.cross_method == 'discrete_crossover':
-        self.discrete_crossover(parent1, parent2)
-    elif self.cross_method == 'self_crossover':
-        self.self_crossover(parent1, parent2)
-    elif self.cross_method == 'binary_crossover':
-        self.binary_crossover(parent1, parent2)
-    elif self.cross_method == 'linkage_evolution_crossover':
-        self.linkage_evolution_crossover(parent1, parent2)
-    elif self.cross_method == 'elite_crossover':
-        self.elite_crossover(parent1, parent2)
-
-    return self.children
 
 
