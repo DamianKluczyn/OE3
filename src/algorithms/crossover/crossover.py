@@ -34,20 +34,26 @@ def discrete_crossover(parents, offspring_size, ga_instance):
     return np.array(offspring)
 
 
-def elite_crossover(self, specimen1, specimen2):
-    if random.random() < self.crossover_prob:
-        self.single_point_crossover(specimen1, specimen2)
-        child1, child2 = self.children[0], self.children[1]
-        ratings = [specimen.fitness for specimen in [specimen1, specimen2, child1, child2]]
+def elite_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+    idx = 0
+
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        parents_temp = single_point_crossover([parent1, parent2], offspring_size, ga_instance)
+        ratings = [fitness_function(ga_instance, parent) for parent in parents_temp]
+
         elite_index = np.argsort(ratings)[-2:]
-        new_population = [specimen1, specimen2, child1, child2][elite_index[0]], [specimen1, specimen2, child1, child2][
-            elite_index[1]]
-        self.children = []
-        self.children.append(new_population[0])
-        self.children.append(new_population[1])
-    else:
-        self.children.append(specimen1)
-        self.children.append(specimen2)
+        new_population = parents_temp[elite_index[0]], parents_temp[elite_index[1]]
+
+        offspring.append(new_population[0])
+        offspring.append(new_population[1])
+
+        idx += 1
+
+    return np.array(offspring)
 
 
 # Tested does not work
