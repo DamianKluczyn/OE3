@@ -77,25 +77,28 @@ def self_crossover(parents, offspring_size, ga_instance):
     return np.array(offspring)
 
 
-def binary_crossover(self, specimen1, specimen2):
-    if random.random() >= self.crossover_prob:
-        self.children.append(specimen1)
-        self.children.append(specimen2)
-    else:
-        child1_chromosomes = []
-        child2_chromosomes = []
+def binary_crossover(parents, offspring_size, ga_instance):
+    offspring = []
 
-        for i in range(len(specimen1.specimen)):
-            chromosome_1 = specimen1.specimen[i].chromosome
-            chromosome_2 = specimen2.specimen[i].chromosome
+    idx = 0
+    while len(offspring) < offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
-            left, right = 0, len(chromosome_1) - 1
+        if random.random() >= 0.5:
+            offspring.append(parent1)
+            offspring.append(parent2)
+        else:
+            child1 = np.empty_like(parent1)
+            child2 = np.empty_like(parent2)
+
+            left, right = 0, len(parent1) - 1
 
             while left < right - 2:
                 center = (left + right) // 2
 
-                TP_1 = np.concatenate((chromosome_1[:center], chromosome_2[center:]))
-                TP_2 = np.concatenate((chromosome_2[:center], chromosome_1[center:]))
+                TP_1 = np.concatenate((parent1[:center], parent2[center:]))
+                TP_2 = np.concatenate((parent2[:center], parent1[center:]))
 
                 NTP_1 = np.sum(TP_1)
                 NTP_2 = np.sum(TP_2)
@@ -105,19 +108,15 @@ def binary_crossover(self, specimen1, specimen2):
                 else:
                     right = center
 
-            child_1 = np.concatenate((chromosome_1[:right], chromosome_2[right:]))
-            child_2 = np.concatenate((chromosome_2[:right], chromosome_1[right:]))
+            child1 = np.concatenate((parent1[:right], parent2[right:]))
+            child2 = np.concatenate((parent2[:right], parent1[right:]))
 
-            child1_chromosomes.append(child_1)
-            child2_chromosomes.append(child_2)
+            offspring.append(child1)
+            offspring.append(child2)
 
-        child1 = Specimen.from_chromosomes(child1_chromosomes, specimen1.boundaries, specimen1.accuracy,
-                                           specimen1.fitness_function)
-        child2 = Specimen.from_chromosomes(child2_chromosomes, specimen2.boundaries, specimen2.accuracy,
-                                           specimen2.fitness_function)
+        idx += 1
 
-        self.children.append(child1)
-        self.children.append(child2)
+    return np.array(offspring[:offspring_size[0]])
 
 
 def linkage_evolution_crossover(self, specimen1, specimen2):
@@ -185,3 +184,84 @@ def center_of_mass_crossover(parents, offspring_size, ga_instance):
         idx += 1
 
     blend_crossover_alpha(parents, offspring_size, ga_instance)
+
+
+def blend_crossover_alpha(parents, offspring_size, ga_instance):
+    offspring = []
+    alpha = 0.2
+
+    idx = 0
+    while len(offspring) < offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        child1 = np.empty_like(parent1)
+        child2 = np.empty_like(parent2)
+
+        for i in range(parent1.shape[0]):
+            min_val = min(parent1[i], parent2[i])
+            max_val = max(parent1[i], parent2[i])
+            range_val = max_val - min_val
+            lower_bound = min_val - alpha * range_val
+            upper_bound = max_val + alpha * range_val
+
+            child1[i] = random.uniform(lower_bound, upper_bound)
+            child2[i] = random.uniform(lower_bound, upper_bound)
+
+        offspring.append(child1)
+        offspring.append(child2)
+
+        idx += 1
+
+    return np.array(offspring[:offspring_size[0]])
+
+
+def blend_crossover_beta(parents, offspring_size, ga_instance):
+    offspring = []
+    alpha_low = 0.2
+    alpha_high = 0.3
+
+    idx = 0
+    while len(offspring) < offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        child1 = np.empty_like(parent1)
+        child2 = np.empty_like(parent2)
+
+        for i in range(parent1.shape[0]):
+            min_val = min(parent1[i], parent2[i])
+            max_val = max(parent1[i], parent2[i])
+            range_val = max_val - min_val
+            lower_bound = min_val - alpha_low * range_val
+            upper_bound = max_val + alpha_high * range_val
+
+            child1[i] = random.uniform(lower_bound, upper_bound)
+            child2[i] = random.uniform(lower_bound, upper_bound)
+
+        offspring.append(child1)
+        offspring.append(child2)
+
+        idx += 1
+
+    return np.array(offspring[:offspring_size[0]])
+
+
+def average_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+
+    idx = 0
+    while len(offspring) < offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        child1 = np.empty_like(parent1)
+
+        for i in range(parent1.shape[0]):
+            child1[i] = (parent1[i] + parent2[i]) / 2
+
+        offspring.append(child1)
+
+        idx += 1
+
+    return np.array(offspring[:offspring_size[0]])
