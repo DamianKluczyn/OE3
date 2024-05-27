@@ -2,11 +2,11 @@ import numpy as np
 import random
 from src.population.specimen import Specimen
 
+
 # Wyjebanie klasy
 # Zmiana argumentów wywołania (PyGAD ma swoje)
 # Zwraca jednego potomka 
 # Zwraca go jako tablicę wartości (tablica z tablicami genów)
-
 
 
 def discrete_crossover(parents, offspring_size, ga_instance):
@@ -20,28 +20,24 @@ def discrete_crossover(parents, offspring_size, ga_instance):
         child1 = parent1
         child2 = parent2
 
-    
         for i in range(parent1.shape[1]):
             if random.uniform(0, 1) < 0.5:
                 child1[i] = parent1[i]
             else:
                 child1[i] = parent2[i]
 
-
             if random.uniform(0, 1) < 0.5:
                 child2[i] = parent2[i]
             else:
                 child2[i] = parent1[i]
-        
+
         offspring.append(child1)
         offspring.append(child2)
 
         idx += 1
-    
+
     return np.array(offspring)
 
-
-    
 
 def elite_crossover(self, specimen1, specimen2):
     if random.random() < self.crossover_prob:
@@ -49,7 +45,8 @@ def elite_crossover(self, specimen1, specimen2):
         child1, child2 = self.children[0], self.children[1]
         ratings = [specimen.fitness for specimen in [specimen1, specimen2, child1, child2]]
         elite_index = np.argsort(ratings)[-2:]
-        new_population = [specimen1, specimen2, child1, child2][elite_index[0]], [specimen1, specimen2, child1, child2][elite_index[1]]
+        new_population = [specimen1, specimen2, child1, child2][elite_index[0]], [specimen1, specimen2, child1, child2][
+            elite_index[1]]
         self.children = []
         self.children.append(new_population[0])
         self.children.append(new_population[1])
@@ -57,39 +54,28 @@ def elite_crossover(self, specimen1, specimen2):
         self.children.append(specimen1)
         self.children.append(specimen2)
 
-def self_crossover(self, specimen1, specimen2):
-    if random.random() >= self.crossover_prob:
-        self.children.append(specimen1)
-        self.children.append(specimen2)
-    else:
-        child1_chromosomes = []
-        child2_chromosomes = []
 
-        for i in range(len(specimen1.specimen)):
-            chromosome = specimen1.specimen[i].chromosome
-            child1 = np.zeros_like(chromosome)
-            ones_counter = sum(chromosome)
-            ones_index = random.sample(range(len(chromosome)), ones_counter)
+def self_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+    idx = 0
+
+    while len(offspring) != offspring_size[0]:
+        parent = parents[idx % parents.shape[0], :].copy()
+        if np.random.random() >= 0.5:  # crossover prob
+            offspring.append(parent)
+        else:
+            child = np.zeros_like(parent)
+            ones_counter = sum(parent)
+            ones_index = random.sample(range(len(parent)), ones_counter)
             for index in ones_index:
-                child1[index] = 1
-            child1_chromosomes.append(child1)
+                child[index] = 1
 
-        for i in range(len(specimen2.specimen)):
-            chromosome = specimen2.specimen[i].chromosome
-            child2 = np.zeros_like(chromosome)
-            ones_counter = sum(chromosome)
-            ones_index = random.sample(range(len(chromosome)), ones_counter)
-            for index in ones_index:
-                child2[index] = 1
-            child2_chromosomes.append(child2)
+            offspring.append(child)
 
-        child1 = Specimen.from_chromosomes(child1_chromosomes, specimen1.boundaries, specimen1.accuracy,
-                                            specimen1.fitness_function)
-        child2 = Specimen.from_chromosomes(child2_chromosomes, specimen2.boundaries, specimen2.accuracy,
-                                            specimen2.fitness_function)
+        idx += 1
 
-        self.children.append(child1)
-        self.children.append(child2)
+    return np.array(offspring)
+
 
 def binary_crossover(self, specimen1, specimen2):
     if random.random() >= self.crossover_prob:
@@ -126,12 +112,13 @@ def binary_crossover(self, specimen1, specimen2):
             child2_chromosomes.append(child_2)
 
         child1 = Specimen.from_chromosomes(child1_chromosomes, specimen1.boundaries, specimen1.accuracy,
-                                            specimen1.fitness_function)
+                                           specimen1.fitness_function)
         child2 = Specimen.from_chromosomes(child2_chromosomes, specimen2.boundaries, specimen2.accuracy,
-                                            specimen2.fitness_function)
+                                           specimen2.fitness_function)
 
         self.children.append(child1)
         self.children.append(child2)
+
 
 def linkage_evolution_crossover(self, specimen1, specimen2):
     if random.random() >= self.crossover_prob:
@@ -170,12 +157,31 @@ def linkage_evolution_crossover(self, specimen1, specimen2):
             child2_chromosomes.append(child2_chromosome)
 
         child1 = Specimen.from_chromosomes(child1_chromosomes, specimen1.boundaries, specimen1.accuracy,
-                                            specimen1.fitness_function)
+                                           specimen1.fitness_function)
         child2 = Specimen.from_chromosomes(child2_chromosomes, specimen2.boundaries, specimen2.accuracy,
-                                            specimen2.fitness_function)
+                                           specimen2.fitness_function)
 
         self.children.append(child1)
         self.children.append(child2)
 
 
+def center_of_mass_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+    idx = 0
 
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        center_of_mass = 0
+
+        center_of_mass += np.sum(parent1) + np.sum(parent2)
+
+        center_of_mass = center_of_mass / 2
+
+        child = -1 * parent1 + 2 * center_of_mass
+
+        offspring.append(child)
+        idx += 1
+
+    blend_crossover_alpha(parents, offspring_size, ga_instance)
