@@ -1,14 +1,9 @@
 import numpy as np
 import random
-from src.population.specimen import Specimen
 
 
-# Wyjebanie klasy
-# Zmiana argumentów wywołania (PyGAD ma swoje)
-# Zwraca jednego potomka 
-# Zwraca go jako tablicę wartości (tablica z tablicami genów)
-
-
+# Tested, does not work
+# Nie wiem czemu, po prostu nie idzie
 def discrete_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
@@ -55,6 +50,9 @@ def elite_crossover(self, specimen1, specimen2):
         self.children.append(specimen2)
 
 
+# Tested does not work
+# Error: ValueError: Sample larger than population or is negative
+# Błąd jest tu: ones_index = random.sample(range(len(parent)), ones_counter)
 def self_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
@@ -77,6 +75,7 @@ def self_crossover(parents, offspring_size, ga_instance):
     return np.array(offspring)
 
 
+# Tested, works
 def binary_crossover(parents, offspring_size, ga_instance):
     offspring = []
 
@@ -163,7 +162,9 @@ def linkage_evolution_crossover(self, specimen1, specimen2):
         self.children.append(child1)
         self.children.append(child2)
 
-
+# Tested, does not work, 
+# Error: TypeError: The output of the crossover step is expected to be of type (numpy.ndarray) but <class 'NoneType'> found.
+# IMO nie może być wywoływana inna funkcja na końcu, trzeba alpha tu wrzucić
 def center_of_mass_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
@@ -185,7 +186,7 @@ def center_of_mass_crossover(parents, offspring_size, ga_instance):
 
     blend_crossover_alpha(parents, offspring_size, ga_instance)
 
-
+# Tested, works
 def blend_crossover_alpha(parents, offspring_size, ga_instance):
     offspring = []
     alpha = 0.2
@@ -215,7 +216,7 @@ def blend_crossover_alpha(parents, offspring_size, ga_instance):
 
     return np.array(offspring[:offspring_size[0]])
 
-
+# Tested, works
 def blend_crossover_beta(parents, offspring_size, ga_instance):
     offspring = []
     alpha_low = 0.2
@@ -246,7 +247,7 @@ def blend_crossover_beta(parents, offspring_size, ga_instance):
 
     return np.array(offspring[:offspring_size[0]])
 
-
+# Tested, works
 def average_crossover(parents, offspring_size, ga_instance):
     offspring = []
 
