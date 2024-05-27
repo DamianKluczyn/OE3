@@ -1,5 +1,13 @@
 import numpy as np
 import random
+import benchmark_functions as bf
+
+func = bf.Ackley(n_dimensions=2)
+
+
+def fitness_fun(ga_instance, solution):
+    fitness = func(solution)
+    return 1. / fitness
 
 
 # Tested, works
@@ -64,8 +72,7 @@ def elite_crossover(parents, offspring_size, ga_instance):
 
 
 # Tested does not work
-# Error: ValueError: Sample larger than population or is negative
-# Błąd jest tu: ones_index = random.sample(range(len(parent)), ones_counter)
+# Aby działało musi być na liczbach binarnych
 def self_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
@@ -131,49 +138,91 @@ def binary_crossover(parents, offspring_size, ga_instance):
     return np.array(offspring)
 
 
-def linkage_evolution_crossover(self, specimen1, specimen2):
-    if random.random() >= self.crossover_prob:
-        self.children.append(specimen1)
-        self.children.append(specimen2)
+# Tested works
+def linkage_evolution_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+    idx = 0
+
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        child1_segment_list = []
+        child2_segment_list = []
+
+        segments = random.randint(1, min(3, len(parent1)))
+        split_points = sorted(random.sample(range(1, len(parent1)), segments - 1))
+        split_points = [0] + split_points + [len(parent1)]
+
+        for j in range(len(split_points) - 1):
+            segment_start = split_points[j]
+            segment_end = split_points[j + 1]
+
+            if j % 2 == 0:
+                child1_segment_list.append(parent1[segment_start:segment_end])
+                child2_segment_list.append(parent2[segment_start:segment_end])
+            else:
+                child1_segment_list.append(parent2[segment_start:segment_end])
+                child2_segment_list.append(parent1[segment_start:segment_end])
+
+        child1 = np.concatenate(child1_segment_list)
+        child2 = np.concatenate(child2_segment_list)
+
+        offspring.append(child1)
+        offspring.append(child2)
+
+    return np.array(offspring)
+
+
+# Tested works
+def linear_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+    idx = 0
+
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        child1 = np.empty_like(parent1)
+        child2 = np.empty_like(parent2)
+        child3 = np.empty_like(parent2)
+
+        for j in range(len(parent1)):
+            child1[j] = 0.5 * parent1[j] + 0.5 * parent2[j]
+            child2[j] = 1.5 * parent1[j] - 0.5 * parent2[j]
+            child3[j] = -0.5 * parent1[j] + 1.5 * parent2[j]
+
+        best_children = sorted([fitness_fun(ga_instance, child) for child in [child1, child2, child3]])[:2]
+        offspring.append(best_children)
+
+    return np.array(offspring)
+
+#Tested works
+def linear3_crossover(parents, offspring_size, ga_instance):
+    alpha = random.random()
+    if alpha >= 0.5:
+        beta = (2 * alpha) ** (1 / (0.5 + 1))
     else:
-        child1_chromosomes = []
-        child2_chromosomes = []
+        beta = (1 / (2 * (1 - alpha))) ** (1 / (0.5 + 1))
 
-        for i in range(len(specimen1.specimen)):
-            chromosome_1 = specimen1.specimen[i].chromosome
-            chromosome_2 = specimen2.specimen[i].chromosome
+    offspring = []
+    idx = 0
 
-            child1_segment_list = []
-            child2_segment_list = []
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
-            segments = random.randint(1, min(3, len(chromosome_1)))
-            split_points = sorted(random.sample(range(1, len(chromosome_1)), segments - 1))
-            split_points = [0] + split_points + [len(chromosome_1)]
+        child1 = np.empty_like(parent1)
+        child2 = np.empty_like(parent2)
 
-            for j in range(len(split_points) - 1):
-                segment_start = split_points[j]
-                segment_end = split_points[j + 1]
+        for j in range(len(parent1)):
+            child1[j] = 0.5 * ((1 + beta) * parent1[j] + (1 - beta) * parent2[j])
+            child2[j] = 0.5 * ((1 - beta) * parent1[j] + (1 + beta) * parent2[j])
 
-                if j % 2 == 0:
-                    child1_segment_list.append(chromosome_1[segment_start:segment_end])
-                    child2_segment_list.append(chromosome_2[segment_start:segment_end])
-                else:
-                    child1_segment_list.append(chromosome_2[segment_start:segment_end])
-                    child2_segment_list.append(chromosome_1[segment_start:segment_end])
+        offspring.append(child1)
+        offspring.append(child2)
 
-            child1_chromosome = np.concatenate(child1_segment_list)
-            child2_chromosome = np.concatenate(child2_segment_list)
-
-            child1_chromosomes.append(child1_chromosome)
-            child2_chromosomes.append(child2_chromosome)
-
-        child1 = Specimen.from_chromosomes(child1_chromosomes, specimen1.boundaries, specimen1.accuracy,
-                                           specimen1.fitness_function)
-        child2 = Specimen.from_chromosomes(child2_chromosomes, specimen2.boundaries, specimen2.accuracy,
-                                           specimen2.fitness_function)
-
-        self.children.append(child1)
-        self.children.append(child2)
+    return np.array(offspring)
 
 
 # Tested #Works
