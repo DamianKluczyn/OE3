@@ -2,8 +2,7 @@ import numpy as np
 import random
 
 
-# Tested, does not work
-# Nie wiem czemu, po prostu nie idzie
+# Tested, works
 def discrete_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
@@ -12,10 +11,10 @@ def discrete_crossover(parents, offspring_size, ga_instance):
         parent1 = parents[idx % parents.shape[0], :].copy()
         parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
-        child1 = parent1
-        child2 = parent2
+        child1 = np.empty_like(parent1)
+        child2 = np.empty_like(parent2)
 
-        for i in range(parent1.shape[1]):
+        for i in range(len(parent1)):
             if random.uniform(0, 1) < 0.5:
                 child1[i] = parent1[i]
             else:
@@ -34,6 +33,7 @@ def discrete_crossover(parents, offspring_size, ga_instance):
     return np.array(offspring)
 
 
+# Tested works
 def elite_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
@@ -41,9 +41,17 @@ def elite_crossover(parents, offspring_size, ga_instance):
     while len(offspring) != offspring_size[0]:
         parent1 = parents[idx % parents.shape[0], :].copy()
         parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+        parent1_temp = np.empty_like(parent1)
+        parent2_temp = np.empty_like(parent2)
+        # single point
+        point = random.randint(1, len(parent1) - 1)
+        parent1_temp[point:] = parent1[point:]
+        parent1_temp[:point] = parent2[:point]
+        parent2_temp[point:] = parent2[point:]
+        parent2_temp[:point] = parent1[:point]
 
-        parents_temp = single_point_crossover([parent1, parent2], offspring_size, ga_instance)
-        ratings = [fitness_function(ga_instance, parent) for parent in parents_temp]
+        parents_temp = [parent1_temp, parent2_temp]
+        ratings = [fitness_fun(ga_instance, parent) for parent in parents_temp]
 
         elite_index = np.argsort(ratings)[-2:]
         new_population = parents_temp[elite_index[0]], parents_temp[elite_index[1]]
@@ -52,7 +60,6 @@ def elite_crossover(parents, offspring_size, ga_instance):
         offspring.append(new_population[1])
 
         idx += 1
-
     return np.array(offspring)
 
 
@@ -86,7 +93,7 @@ def binary_crossover(parents, offspring_size, ga_instance):
     offspring = []
 
     idx = 0
-    while len(offspring) < offspring_size[0]:
+    while len(offspring) != offspring_size[0]:
         parent1 = parents[idx % parents.shape[0], :].copy()
         parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
@@ -121,7 +128,7 @@ def binary_crossover(parents, offspring_size, ga_instance):
 
         idx += 1
 
-    return np.array(offspring[:offspring_size[0]])
+    return np.array(offspring)
 
 
 def linkage_evolution_crossover(self, specimen1, specimen2):
@@ -168,9 +175,33 @@ def linkage_evolution_crossover(self, specimen1, specimen2):
         self.children.append(child1)
         self.children.append(child2)
 
-# Tested, does not work, 
-# Error: TypeError: The output of the crossover step is expected to be of type (numpy.ndarray) but <class 'NoneType'> found.
-# IMO nie może być wywoływana inna funkcja na końcu, trzeba alpha tu wrzucić
+
+# Tested #Works
+def arithmetic_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+    idx = 0
+    alpha = np.random.uniform(0, 1)
+
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        parent1_genome = np.zeros_like(parent1)
+        parent2_genome = np.zeros_like(parent2)
+
+        for i in range(len(parent1)):
+            parent1_genome[i] = alpha * parent1[i] + (1 - alpha) * parent2[i]
+            parent2_genome[i] = (1 - alpha) * parent2[i] + alpha * parent1[i]
+
+        offspring.append(parent1_genome)
+        offspring.append(parent2_genome)
+
+        idx += 1
+
+    return np.array(offspring)
+
+
+# Tested,works
 def center_of_mass_crossover(parents, offspring_size, ga_instance):
     offspring = []
     idx = 0
@@ -189,16 +220,12 @@ def center_of_mass_crossover(parents, offspring_size, ga_instance):
 
         offspring.append(child)
         idx += 1
-
-    blend_crossover_alpha(parents, offspring_size, ga_instance)
-
-# Tested, works
-def blend_crossover_alpha(parents, offspring_size, ga_instance):
+    parents = np.array(offspring)
     offspring = []
     alpha = 0.2
 
     idx = 0
-    while len(offspring) < offspring_size[0]:
+    while len(offspring) != offspring_size[0]:
         parent1 = parents[idx % parents.shape[0], :].copy()
         parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
@@ -220,7 +247,81 @@ def blend_crossover_alpha(parents, offspring_size, ga_instance):
 
         idx += 1
 
-    return np.array(offspring[:offspring_size[0]])
+    return np.array(offspring)
+
+
+# Tested, works
+def imperfect_crossover(parents, offspring_size, ga_instance):
+    offspring = []
+    idx = 0
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+        rand_temp = random.uniform(0, 1)
+        point = random.randint(1, len(parent1) - 1)
+        child1 = [0] * len(parent1)
+        child2 = [0] * len(parent2)
+
+        if rand_temp < 0.33:
+            child1[:point - 1] = parent1[:point - 1]
+            child1[point + 1:] = parent2[point + 1:]
+            child1[point] = np.random.uniform(np.min(parent1), np.max(parent1))
+
+            child2[:point - 1] = parent2[:point - 1]
+            child2[point + 1:] = parent1[point + 1:]
+            child2[point] = np.random.uniform(np.min(parent2), np.max(parent2))
+        elif rand_temp < 0.66:
+            child1[:point - 1] = parent1[:point - 1]
+            child1[point + 1:] = parent2[point + 1:]
+            child1[point] = 0
+
+            child2[:point - 1] = parent2[:point - 1]
+            child2[point + 1:] = parent1[point + 1:]
+            child2[point] = 0
+        else:
+            child1[:point] = parent1[:point]
+            child1[point:] = parent2[point:]
+
+            child2[:point] = parent2[:point]
+            child2[point:] = parent1[point:]
+
+        offspring.append(child1)
+        offspring.append(child2)
+        idx += 1
+
+    return np.array(offspring)
+
+
+# Tested, works
+def blend_crossover_alpha(parents, offspring_size, ga_instance):
+    offspring = []
+    alpha = 0.2
+
+    idx = 0
+    while len(offspring) != offspring_size[0]:
+        parent1 = parents[idx % parents.shape[0], :].copy()
+        parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+        child1 = np.empty_like(parent1)
+        child2 = np.empty_like(parent2)
+
+        for i in range(parent1.shape[0]):
+            min_val = min(parent1[i], parent2[i])
+            max_val = max(parent1[i], parent2[i])
+            range_val = max_val - min_val
+            lower_bound = min_val - alpha * range_val
+            upper_bound = max_val + alpha * range_val
+
+            child1[i] = random.uniform(lower_bound, upper_bound)
+            child2[i] = random.uniform(lower_bound, upper_bound)
+
+        offspring.append(child1)
+        offspring.append(child2)
+
+        idx += 1
+
+    return np.array(offspring)
+
 
 # Tested, works
 def blend_crossover_beta(parents, offspring_size, ga_instance):
@@ -229,7 +330,7 @@ def blend_crossover_beta(parents, offspring_size, ga_instance):
     alpha_high = 0.3
 
     idx = 0
-    while len(offspring) < offspring_size[0]:
+    while len(offspring) != offspring_size[0]:
         parent1 = parents[idx % parents.shape[0], :].copy()
         parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
@@ -251,14 +352,15 @@ def blend_crossover_beta(parents, offspring_size, ga_instance):
 
         idx += 1
 
-    return np.array(offspring[:offspring_size[0]])
+    return np.array(offspring)
+
 
 # Tested, works
 def average_crossover(parents, offspring_size, ga_instance):
     offspring = []
 
     idx = 0
-    while len(offspring) < offspring_size[0]:
+    while len(offspring) != offspring_size[0]:
         parent1 = parents[idx % parents.shape[0], :].copy()
         parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
@@ -271,4 +373,4 @@ def average_crossover(parents, offspring_size, ga_instance):
 
         idx += 1
 
-    return np.array(offspring[:offspring_size[0]])
+    return np.array(offspring)
