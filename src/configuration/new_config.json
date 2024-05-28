@@ -8,7 +8,7 @@
     "mutation_method": "random",
     "crossover_method": "self",
 
-    "parents_mating": 3,
+    "parents_mating": 4,
 
     "range_low": 0,
     "range_high": 2,

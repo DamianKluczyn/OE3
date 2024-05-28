@@ -71,7 +71,11 @@ if __name__ == '__main__':
         num_genes=number_of_genes,
         sol_per_pop=population_size,
         num_generations=generations,
-        num_parents_mating=3
+
+        num_parents_mating=parents_mating,
+        keep_elitism=0,
+
+        on_generation=on_generation
     )
 
     ga_instance.run()
