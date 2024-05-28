@@ -1,15 +1,16 @@
 import logging
 import pygad
 import numpy as np
-import benchmark_functions as bf
-import random
 
 from src.optimization.optimization import Optimization
 from src.configuration.config import Config
 from src.algorithms.crossover.crossover import Crossover
 
 if __name__ == '__main__':
+    # Konfiguracja parametrów
     config = Config()
+
+    maximum = config.get_param("algorithm_parameters.maximization")
 
     optimization = Optimization()
     fitness_function = optimization.optimization()
@@ -22,7 +23,6 @@ if __name__ == '__main__':
 
     range_low = config.get_param("algorithm_parameters.range_low")
     range_high = config.get_param("algorithm_parameters.range_high")
-    gene_type = config.get_param("algorithm_parameters.gene_type")
 
     number_of_genes = config.get_param("algorithm_parameters.number_of_genes")
 
@@ -31,6 +31,7 @@ if __name__ == '__main__':
 
     parents_mating = config.get_param("algorithm_parameters.parents_mating")
 
+    # Konfiguracja logging
     level = logging.DEBUG
     name = 'logfile.txt'
     logger = logging.getLogger(name)
@@ -46,17 +47,20 @@ if __name__ == '__main__':
         ga_instance.logger.info("Generation = {generation}".format(generation=ga_instance.generations_completed))
         solution, solution_fitness, solution_idx = ga_instance.best_solution(
             pop_fitness=ga_instance.last_generation_fitness)
-        ga_instance.logger.info("Best    = {fitness}".format(fitness=1. / solution_fitness))
+        ga_instance.logger.info(f"Best = {1. / solution_fitness if not maximum else solution_fitness}")
         ga_instance.logger.info("Individual    = {solution}".format(solution=repr(solution)))
 
-        tmp = [1. / x for x in
-               ga_instance.last_generation_fitness]  # ponownie odwrotność by zrobić sobie dobre statystyki
+        if not maximum:
+            tmp = [1. / x for x in ga_instance.last_generation_fitness]
+        else:
+            tmp = [x for x in ga_instance.last_generation_fitness]
 
         ga_instance.logger.info("Min    = {min}".format(min=np.min(tmp)))
         ga_instance.logger.info("Max    = {max}".format(max=np.max(tmp)))
         ga_instance.logger.info("Average    = {average}".format(average=np.average(tmp)))
         ga_instance.logger.info("Std    = {std}".format(std=np.std(tmp)))
         ga_instance.logger.info("\r\n")
+
 
     ga_instance = pygad.GA(
         fitness_func=fitness_function,
@@ -66,16 +70,18 @@ if __name__ == '__main__':
 
         init_range_low=range_low,
         init_range_high=range_high,
-        gene_type=int,
+        gene_type=float,
 
         num_genes=number_of_genes,
         sol_per_pop=population_size,
         num_generations=generations,
 
         num_parents_mating=parents_mating,
-        keep_elitism=0,
+        keep_elitism=2,
 
-        on_generation=on_generation
+        on_generation=on_generation,
+        logger=logger,
+        parallel_processing=['thread', 4]
     )
 
     ga_instance.run()
@@ -83,8 +89,10 @@ if __name__ == '__main__':
     best = ga_instance.best_solution()
     solution, solution_fitness, solution_idx = ga_instance.best_solution()
     print("Parameters of the best solution : {solution}".format(solution=solution))
-    print("Fitness value of the best solution = {solution_fitness}".format(solution_fitness=1. / solution_fitness))
+    print(f"Fitness value of the best solution = {1. / solution_fitness if not maximum else solution_fitness}")
 
-    # sztuczka: odwracamy my narysował nam się oczekiwany wykres dla problemu minimalizacji
-    ga_instance.best_solutions_fitness = [1. / x for x in ga_instance.best_solutions_fitness]
+    if not maximum:
+        ga_instance.best_solutions_fitness = [1. / x for x in ga_instance.best_solutions_fitness]
+    else:
+        ga_instance.best_solutions_fitness = [x for x in ga_instance.best_solutions_fitness]
     ga_instance.plot_fitness()

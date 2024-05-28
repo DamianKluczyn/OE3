@@ -11,11 +11,11 @@ class Optimization:
 
     def bent_cigar(self, ga_instance, solution, solution_idx):
         func = cec_based.F32013(ndim=self.config.get_param('algorithm_parameters.number_of_genes'))
-        return 1. / func.evaluate(solution) if self.maximum else func.evaluate(solution)
+        return func.evaluate(solution)
 
     def hypersphere(self, ga_instance, solution, solution_idx):
         func = bf.Hypersphere(n_dimensions=self.config.get_param('algorithm_parameters.number_of_genes'))
-        return func(solution) if self.maximum else 1. / func(solution)
+        return func(solution)
 
     def optimization(self):
         option = self.config.get_param('algorithm_parameters.fitness_function')
