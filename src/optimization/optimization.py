@@ -1,6 +1,6 @@
 import numpy as np
 import benchmark_functions as bf
-from opfunu import cec_based 
+from opfunu import cec_based
 from src.configuration.config import Config
 
 
@@ -9,10 +9,19 @@ class Optimization:
         self.config = Config()
         self.maximum = self.config.get_param('algorithm_parameters.maximization')
 
-    def bent_cigar_function(self, x):
-        func = cec_based.F32013(ndim=self.conig.get_param('algorithm_parameters.number_of_variables'))
-        return 1. / func.evaluate(x) if self.maximum else func.evaluate(x)
+    def bent_cigar(self, ga_instance, solution, solution_idx):
+        func = cec_based.F32013(ndim=self.config.get_param('algorithm_parameters.number_of_genes'))
+        return 1. / func.evaluate(solution) if self.maximum else func.evaluate(solution)
 
-    def hypersphere(self, x):
-        func = bf.Hypersphere(n_dimensions=self.conig.get_param('algorithm_parameters.number_of_variables'))
-        return func(x) if self.maximum else 1. / func(x)
+    def hypersphere(self, ga_instance, solution, solution_idx):
+        func = bf.Hypersphere(n_dimensions=self.config.get_param('algorithm_parameters.number_of_genes'))
+        return func(solution) if self.maximum else 1. / func(solution)
+
+    def optimization(self):
+        option = self.config.get_param('algorithm_parameters.fitness_function')
+        if option == 'bent_cigar':
+            return self.bent_cigar
+        elif option == 'hypersphere':
+            return self.hypersphere
+        else:
+            return 0
