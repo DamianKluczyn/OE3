@@ -1,19 +1,20 @@
 {
   "algorithm_parameters": {
-    "fitness_function": "hypersphere",
+    "fitness_function": "bent_cigar",
     "number_of_genes": 2,
-    "maximization": false,
+    "maximization": true,
 
     "selection_method": "rws",
     "mutation_method": "random",
-    "crossover_method": "linear_3",
+    "crossover_method": "discrete",
 
-    "parents_mating": 5,
+    "parents_mating": 4,
 
-    "range_low": -5,
-    "range_high": 5,
+    "range_low": -123123,
+    "range_high": 212314124,
+    "gene_type": "float",
 
     "population_size": 100,
-    "number_of_generations": 100
+    "number_of_generations": 20
   }
 }
